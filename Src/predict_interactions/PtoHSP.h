@@ -57,39 +57,34 @@ void PtoHSP :: load_HSP_pairs(){
 		exit(3);
 	}
 	cout<<"loading HSP file: "<<HSP_FN<<endl;
-	string temp1, temp2, temp3, temp4;
 	int temp_p1_id = -1, temp_p2_id = -1;
-	int PRTEIN_FOUND = 0;//0: protein name in the HSP is not in the sequence file; 1: otherwise
-	while(fin >> temp1 >> temp2 >> temp3){
-		if(temp1 == ">"){	//read protein info, > p1 and p2
-			PRTEIN_FOUND = 0;
-			fin >> temp4;
-			// temp1: >; temp2: p1_name; temp3: and; temp4: p2_name
-			if((p_name_id.find(temp2) != p_name_id.end()) && (p_name_id.find(temp4) != p_name_id.end())){
-				PRTEIN_FOUND = 1;
-				temp_p1_id = p_name_id.at(temp2);
-				temp_p2_id = p_name_id.at(temp4);
-			}
-			else{
-				if(p_name_id.find(temp2) == p_name_id.end()) cout<<"In the HSP file, Protein "<<temp2<<" could not be found in the protein sequence file.\n";
-				if(p_name_id.find(temp4) == p_name_id.end()) cout<<"In the HSP file, Protein "<<temp4<<" could not be found in the protein sequence file.\n";
-			}
-		}
-		else{//read hsp info if the proteins are in the protein sequences file
-			if(PRTEIN_FOUND){
-				//temp1: sta1; temp2: sta2; temp3: length
-				if ((temp_p1_id == temp_p2_id) && ( atoi(temp3.c_str()) == (int)(p_id_seq.at(temp_p1_id).length()))) { //hsp with itsefl
-					HSP_OCC temp_hsp(temp_p2_id, atoi(temp1.c_str()), atoi(temp2.c_str()), atoi(temp3.c_str()), (float)socre_between_two_hsp(temp_p1_id, temp_p2_id, 0, 0, atoi(temp3.c_str()))  );
+    string p1, p2, s1, s2, l;
+	while (fin >> p1 >> p2 >> s1 >> s2 >> l) {
+        if(p_name_id.find(p1) != p_name_id.end()){
+            temp_p1_id = p_name_id.at(p1);
+            if(p_name_id.find(p2) != p_name_id.end()){
+                temp_p2_id = p_name_id.at(p2);
+            }
+            else{
+                cout<<"warning: protein "<< p2 <<" in the HSP file could not be found in the protein sequence file."<<endl;
+                continue;
+            }				
+        }
+        else{
+            cout<<"warning: protein "<< p1 <<" in the HSP file could not be found in the protein sequence file."<<endl;
+            continue;
+        }
+        if ((temp_p1_id == temp_p2_id) && ( atoi(s1.c_str()) == (int)(p_id_seq.at(temp_p1_id).length()))) { //hsp with itsefl
+					HSP_OCC temp_hsp(temp_p2_id, atoi(s1.c_str()), atoi(s2.c_str()), atoi(l.c_str()), (float)socre_between_two_hsp(temp_p1_id, temp_p2_id, 0, 0, atoi(l.c_str()))  );
 					HSP_table.at(temp_p1_id).push_back(temp_hsp);					
 				}
 				else{	//normal HSPs
-					store_this_hsp(temp_p1_id, temp_p2_id, atoi(temp1.c_str()), atoi(temp2.c_str()), atoi(temp3.c_str()));
-				}				
-			}
-		}
-	}
+					store_this_hsp(temp_p1_id, temp_p2_id, atoi(s1.c_str()), atoi(s2.c_str()), atoi(l.c_str()));
+				}
+    }
 	fin.close();
 }
+
 void PtoHSP :: print_HSP_table(){
 	for(int a = 0; a < num_protein; a ++){
 		if(HSP_table.at(a).size() != 0){
@@ -116,39 +111,29 @@ void PtoHSP :: pre_load_HSP_pairs(){
 		cout << "error opening file " << HSP_FN << endl;
 		exit(3);
 	}
-	string temp1, temp2, temp3;
+    string p1, p2, s1, s2, l;
 	int temp_p1_id = -1, temp_p2_id = -1;
-	int PROTEIN_FOUND = 1;
-	while (fin >> temp1 >> temp2 >> temp3) {
-		if (temp1 == ">") {
-			PROTEIN_FOUND = 1;
-			//temp1: >; temp2: p1name; temp3: andm
-			if(p_name_id.find(temp2) != p_name_id.end()){
-				temp_p1_id = p_name_id.at(temp2);
-				fin >> temp1;
-				//temp1: p2name
-				if(p_name_id.find(temp1) != p_name_id.end()){
-					temp_p2_id = p_name_id.at(temp1);
-				}
-				else{
-					cout<<"warning: protein "<<temp1<<" in the HSP file could not be found in the protein sequence file."<<endl;
-					PROTEIN_FOUND = 0;
-				}				
-			}
-			else{
-				cout<<"warning: protein "<<temp2<<" in the HSP file could not be found in the protein sequence file."<<endl;
-				PROTEIN_FOUND = 0;
-			}
-		} else {
-			if(PROTEIN_FOUND){
-				mark_flag(temp_p1_id, atoi(temp1.c_str()), atoi(temp3.c_str()));
-				mark_flag(temp_p2_id, atoi(temp2.c_str()), atoi(temp3.c_str()));
-			}
-		}
-	}
+	while (fin >> p1 >> p2 >> s1 >> s2 >> l) {
+        if(p_name_id.find(p1) != p_name_id.end()){
+            temp_p1_id = p_name_id.at(p1);
+            if(p_name_id.find(p2) != p_name_id.end()){
+                temp_p2_id = p_name_id.at(p2);
+            }
+            else{
+                cout<<"warning: protein "<< p2 <<" in the HSP file could not be found in the protein sequence file."<<endl;
+                continue;
+            }				
+        }
+        else{
+            cout<<"warning: protein "<< p1 <<" in the HSP file could not be found in the protein sequence file."<<endl;
+            continue;
+        }
+        mark_flag(temp_p1_id, atoi(s1.c_str()), atoi(l.c_str()));
+        mark_flag(temp_p2_id, atoi(s2.c_str()), atoi(l.c_str()));
+    }
 	fin.close();
-
 }
+
 void PtoHSP :: store_this_hsp(int p1, int p2, int sta1, int sta2, int hsp_len){
 	for(int a = 0; a < hsp_len - 19; a ++){
 		if(a == hsp_len - 20){ //last position
