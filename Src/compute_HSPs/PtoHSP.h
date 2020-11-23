@@ -67,9 +67,8 @@ void PtoHSP :: print_HSP(){
 	}
 	for(boost::unordered_map < pair <int, int>, set <HSP_pair> >:: iterator it = HSP_PAIRS.begin(); it != HSP_PAIRS.end(); it++){
 		//indicating which two proteins
-		fout<<"> "<<p_id_name.at(it->first.first)<<" and "<<p_id_name.at(it->first.second)<<"\n";
 		for(set <HSP_pair>::iterator it2 = (it->second.begin()); it2 != (it->second.end()); it2 ++){
-			fout<<it2->p1_sta<<" "<<it2->p2_sta<<" "<<it2->length<<"\n";
+			fout << p_id_name.at(it->first.first) << " " << p_id_name.at(it->first.second) << " " << it2->p1_sta<<" "<<it2->p2_sta<<" "<<it2->length<<"\n";
 			// fout<<it2->p1_sta<<" "<<it2->p2_sta<<" "<<it2->length<<" "<<compare_two_strings(it->first.first,it->first.second,it2->p1_sta,it2->p2_sta,it2->length)<<"\n";
 		}
 	}
@@ -348,15 +347,25 @@ void PtoHSP :: extend_HSP(int p1_id, int p2_id, int sta1, int sta2, HASH_TABLE &
 			}
 		}
 
-		//no need to check p1, p2 here, because after the function "put_window" all p1_id<p2_id here
-		HSP_pair p(new_sta1, new_sta2, new_end1 - new_sta1 + 1);
-		#ifdef PARAL
-		omp_set_lock(&lock);	
-		#endif
-		HSP_PAIRS[make_pair(p1_id,p2_id)].insert(p);
-		#ifdef PARAL
-		omp_unset_lock(&lock);
-		#endif
+        if(p1_id == p2_id && new_sta1 > new_sta2) {
+            HSP_pair p(new_sta2, new_sta1, new_end1 - new_sta1 + 1);
+            #ifdef PARAL
+            omp_set_lock(&lock);	
+            #endif
+            HSP_PAIRS[make_pair(p1_id,p2_id)].insert(p);
+            #ifdef PARAL
+            omp_unset_lock(&lock);
+            #endif
+        } else {
+            HSP_pair p(new_sta1, new_sta2, new_end1 - new_sta1 + 1);
+            #ifdef PARAL
+            omp_set_lock(&lock);	
+            #endif
+            HSP_PAIRS[make_pair(p1_id,p2_id)].insert(p);
+            #ifdef PARAL
+            omp_unset_lock(&lock);
+            #endif
+        }
 }
 void PtoHSP :: load_identi_sub_seq(string sub_seq_fn){
 	ifstream fin(sub_seq_fn.c_str());
